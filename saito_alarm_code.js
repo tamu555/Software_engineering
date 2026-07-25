@@ -127,14 +127,17 @@ function notice() {
   for (var i=1; i<data.length; i++) {
     var [day, hour, minute, message, to] = data[i];
 
-    if (message === "" || to === "") { continue; }
+    if (message === "") { continue; }
 
     if ( (day    ==  now.getDate()                   || day === "")
       && (hour   ==  now.getHours()                  || hour       === "")
       && (minute ==  now.getMinutes()                || minute     === "")
       )
       {
-        pushMessage(to, message);
+        broadcastMessage(message);
+        if (to && to != ""){
+          pushMessage(to, message);
+        }
       }
   }
 }
