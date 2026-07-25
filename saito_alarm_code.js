@@ -1,8 +1,5 @@
-
-// 「メッセージ送受信設定」のアクセストークン（ロングターム）を記入してください。
 var ACCESS_TOKEN = 'Fl9/mn/oY19WSsSnWBQAjzsBvSVdvlZhqglkLm5q7TYWhVLqCAFSPq2SnGUtHYQyGeOo23HgrjNOoBZ1nHpiOI6LbXAe8eUSLJP5CzLHC/1cyf8oB8WaJxTQbv/ibV4sqBjguobK+uTVlmbBf6yqfgdB04t89/1O/w1cDnyilFU=';
 
-// 発言させたい日時と内容が書かれたシートのKeyを記入してください。
 var SHEET_KEY = '1cuQuT0LzwbHEzL3VLP_I0WH5NAiS0BNuzbjCdReYhzU';
 
 function authorize() {
@@ -10,25 +7,34 @@ function authorize() {
   UrlFetchApp.fetch('https://api.line.me');
 }
 
-
 function doPost(e) {
   var event = JSON.parse(e.postData.contents).events[0];
   var userMessage = event.message.text;
 
   var message = "";
-/*  if ( userMessage === "ID" ) {
-    message = tellID(event);
+  
+  var sheetSettings = SpreadsheetApp.openById(SHEET_KEY).getSheetByName('Settings');
+  
+  if (userMessage === '手続きしたよ') {
+    sheetSettings.getRange("B1").setValue(true);
+    message = "通知停止";
+  } else if (userMessage === 'キャンセル') {
+    message = "通知開始";
+  } else {
+    /*  if ( userMessage === "ID" ) {
+      message = tellID(event);
+    }
+    else {
+      message = "メッセージを受け取りました";
+    }*/
   }
-  else {
-    // 疎通確認が終わったらコメントアウトすると良いです。
-    message = "メッセージを受け取ったわよ！";
-  }*/
 
-  replyMessage(event.replyToken, message);
+  // メッセージが空でない場合のみ返信を実行するよう調整
+  if (message !== "") {
+    replyMessage(event.replyToken, message);
+  }
   return ContentService.createTextOutput(JSON.stringify({'content': 'post ok'})).setMimeType(ContentService.MimeType.JSON);
 }
-
-
 
 function doGet(e) {
   return ContentService
@@ -91,6 +97,12 @@ function tellID(event) {
 }
 
 function notice() {
+  var settingsSheet = SpreadsheetApp.openById(SHEET_KEY).getSheetByName('Settings');
+  //Trueの時配信を停止
+  if (settingsSheet && settingsSheet.getRange("B1").getValue() === true) {
+    return;
+  }
+
   var sheet = SpreadsheetApp.openById(SHEET_KEY).getSheetByName('saito_alarm');
   var data  = sheet.getDataRange().getValues();
 
@@ -98,7 +110,6 @@ function notice() {
   for (var i=1; i<data.length; i++) {
     var [day, hour, minute, message, to] = data[i];
 
-    // 本文と発言する場所が空の場合はスキップ
     if (message === "" || to === "") { continue; }
 
     if ( (day    ==  now.getDate()                   || day === "")
@@ -108,5 +119,12 @@ function notice() {
       {
         pushMessage(to, message);
       }
+  }
+}
+
+function autoResumeNotification() {
+  var sheet = SpreadsheetApp.openById(SHEET_KEY).getSheetByName('Settings');
+  if (sheet) {
+    sheet.getRange("B1").setValue(false);
   }
 }
