@@ -78,6 +78,23 @@ function pushMessage(to, message) {
   });
 }
 
+function broadcastMessage(message) {
+  UrlFetchApp.fetch('https://api.line.me/v2/bot/message/broadcast', {
+    'headers': {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': 'Bearer ' + ACCESS_TOKEN,
+    },
+    'method': 'post',
+    'muteHttpExceptions': true,
+    'payload': JSON.stringify({
+      'messages': [{
+        'type': 'text',
+        'text': message,
+      }],
+    }),
+  });
+}
+
 function tellID(event) {
   // ID
   var userID = event.source.userId;
